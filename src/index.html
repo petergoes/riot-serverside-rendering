@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>riot test</title>
+  <style type="text/css">sample,[data-is="sample"]{ font-size: 2rem } sample h3,[data-is="sample"] h3{ color: #444 } sample ul,[data-is="sample"] ul{ color: #999 }</style>
+</head>
+<body>
+  {{ sample }}
+
+  <script src="https://cdn.jsdelivr.net/riot/3.0/riot+compiler.min.js"></script>
+  <script src="sample.tag" type="riot/tag"></script>
+  <script>
+    riot.mount('sample', {{ sampleData }});
+  </script>
+
+</body>
+</html>

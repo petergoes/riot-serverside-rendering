@@ -1,0 +1,13 @@
+{
+  "name": "riot-server-side",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "riot tags/sample.tag tags/sample.tmp.tag.js",
+    "start": "sed \"1s;^;const riot = require('riot')\\; module.exports = ;\" tags/sample.tmp.tag.js > tags/sample.tag.js && rm tags/sample.tmp.tag.js",
+    "poststart": "node server/app.js"
+  },
+  "author": "Peter Goes <petergoes@gmail.com>",
+  "license": "ISC"
+}
