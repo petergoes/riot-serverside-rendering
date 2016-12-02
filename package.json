@@ -9,5 +9,10 @@
     "poststart": "node server/app.js"
   },
   "author": "Peter Goes <petergoes@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "4.14.0",
+    "nunjucks": "3.0.0",
+    "riot": "3.0.1"
+  }
 }
