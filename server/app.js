@@ -1,7 +1,7 @@
 const express = require('express');
 const riot = require('riot');
 const nunjucks = require('nunjucks');
-const sample = require('../tags/sample.tag');
+const counter = require('../tags/counter.tag');
 const app = express();
 
 nunjucks.configure('src', {
@@ -13,10 +13,10 @@ app.use(express.static('tags'));
 
 app.get('/', function(req, res) {
 	const data = { counter: req.query.counter || 0 };
-	const mysample = riot.render(sample, data);
+	const mycounter = riot.render(counter, data);
 	res.render('index.html', {
-		sample: mysample,
-		sampleData: JSON.stringify(data)
+		counter: mycounter,
+		counterData: JSON.stringify(data)
 	})
 });
 

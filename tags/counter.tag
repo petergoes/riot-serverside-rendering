@@ -1,4 +1,4 @@
-<sample>
+<counter>
   <h1>Press the button</h1>
   <p>You pressed the button { counter } times</p>
   <form action="/" method="GET">
@@ -16,4 +16,4 @@
       event.preventDefault();
     }
   </script>
-</sample>
+</counter>

@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prestart": "riot tags/sample.tag tags/sample.tmp.tag.js",
-    "start": "sed \"1s;^;const riot = require('riot')\\; module.exports = ;\" tags/sample.tmp.tag.js > tags/sample.tag.js && rm tags/sample.tmp.tag.js",
+    "prestart": "riot tags/counter.tag tags/counter.tmp.tag.js",
+    "start": "sed \"1s;^;const riot = require('riot')\\; module.exports = ;\" tags/counter.tmp.tag.js > tags/counter.tag.js && rm tags/counter.tmp.tag.js",
     "poststart": "node server/app.js"
   },
   "author": "Peter Goes <petergoes@gmail.com>",
