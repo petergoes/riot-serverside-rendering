@@ -1,9 +1,12 @@
+const promisify = require('bluebird').promisify;
 const express = require('express');
 const riot = require('riot');
-const appTag = require('../tags/app.tag');
-const counterTag = require('../tags/counter.tag');
 const nunjucks = require('nunjucks');
+const { compiledTags } = require('./compiler');
+const MongoClient = promisify(require('mongodb').MongoClient);
 const app = express();
+
+let database;
 
 nunjucks.configure('src', {
   autoescape: false,
@@ -13,16 +16,24 @@ nunjucks.configure('src', {
 app.use(express.static('tags'));
 
 app.get('/', function(req, res) {
-	const data = { counter: req.query.counter || 0 };
-	const myapp = riot.render(appTag, data);
-	riot.compile(counterTag);
-	riot.compile(appTag);
-	res.render('index.html', {
-		app: myapp,
-		appData: JSON.stringify(data)
-	})
+	const todos = database.collection('todos');
+	todos.find({}).toArray()
+		.then((result) => {
+			const data = {
+				todos: result
+			};
+			const html = riot.render('todo-overview', data);
+			res.render('index.html', {
+				html: html
+			})
+		});
 });
 
-app.listen(3000, function() {
-	console.log('App listening on port 3000!');
-});
+compiledTags
+	.then(() => app.listen(3000))
+	.then(() => console.log('Listening on port 3000!'));
+
+MongoClient.connect('mongodb://localhost:27017')
+	.then((db) => database = db)
+	.then(() => console.log('Connected to database'))
+	.catch((err) => console.log('err:', err));
