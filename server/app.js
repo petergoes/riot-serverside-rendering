@@ -1,4 +1,6 @@
 const promisify = require('bluebird').promisify;
+const ObjectId = require('mongodb').ObjectId;
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser')
 const riot = require('riot');
@@ -30,22 +32,44 @@ app.post('/', bodyParser.urlencoded({ extended: false }), function(req, res) {
 				.then((result) => resolve(result))
 				.catch((err) => reject(err))
 		} else {
-			resolve()
+			let completed;
+			if (req.body.completed) {
+				completed = ((typeof req.body.completed === 'string') ? [req.body.completed] : req.body.completed);
+			} else {
+				completed = [];
+			}
+
+			todos.find({}, {_id: 1}).toArray().then((result) => {
+				const allIds = result.map(obj => obj._id.toString());
+
+				const updates = allIds.map(id => {
+					return todos.update({ _id: new ObjectId(id)}, { $set: { completed: completed.includes(id) } })
+				})
+				Promise.all(updates)
+					.then(resolve);
+			});
 		}
 	});
 
-	addNewTodo.then(() => {
-		todos.find({}).toArray()
-			.then((result) => {
-				const data = {
-					todos: result
-				};
-				const html = riot.render('todo-overview', data);
-				res.render('index.html', {
-					html: html
-				})
-			});	
-	});
+	addNewTodo
+		.then(() => {
+			if (req.body.delete) {
+				const toDelete = (typeof req.body.delete === 'string') ? [req.body.delete] : req.body.delete;
+				return Promise.all(toDelete.map(id => todos.remove( {_id: new ObjectId(id) } )));
+			}
+		})
+		.then(() => {
+			todos.find({}).toArray()
+				.then((result) => {
+					const data = {
+						todos: result
+					};
+					const html = riot.render('todo-overview', data);
+					res.render('index.html', {
+						html: html
+					})
+				});	
+		});
 });
 
 app.get('/', function(req, res) {
