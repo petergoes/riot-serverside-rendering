@@ -1,5 +1,6 @@
 const promisify = require('bluebird').promisify;
 const express = require('express');
+const bodyParser = require('body-parser')
 const riot = require('riot');
 const nunjucks = require('nunjucks');
 const { compiledTags } = require('./compiler');
@@ -14,6 +15,38 @@ nunjucks.configure('src', {
 });
 
 app.use(express.static('tags'));
+
+app.post('/', bodyParser.urlencoded({ extended: false }), function(req, res) {
+	const todos = database.collection('todos');
+	const addNewTodo = new Promise((resolve, reject) => {
+		if (req.body['new-todo']) {
+			const todoObj = {
+				name: req.body['new-todo'],
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				completed: false
+			};
+			todos.insert(todoObj)
+				.then((result) => resolve(result))
+				.catch((err) => reject(err))
+		} else {
+			resolve()
+		}
+	});
+
+	addNewTodo.then(() => {
+		todos.find({}).toArray()
+			.then((result) => {
+				const data = {
+					todos: result
+				};
+				const html = riot.render('todo-overview', data);
+				res.render('index.html', {
+					html: html
+				})
+			});	
+	});
+});
 
 app.get('/', function(req, res) {
 	const todos = database.collection('todos');
