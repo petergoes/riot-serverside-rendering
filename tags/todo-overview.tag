@@ -7,7 +7,7 @@
 	<main>
 		<h2>A list of todos</h2>
 		
-		<form action="/" method="POST" onsubmit="{ formSubmit }">
+		<form action="/" method="POST" onsubmit="{ formSubmit }" ref="form">
 			<ul>
 				<li each="{ todo in opts.todos }">
 					{ todo.name }
@@ -18,6 +18,7 @@
 							type="checkbox" 
 							name="completed"
 							checked="{ todo.completed }"
+							onchange="{ formSubmit }"
 							value="{ todo._id }" />
 					</label>
 					-
@@ -26,20 +27,21 @@
 						<input 
 							type="checkbox" 
 							name="delete"
+							onchange="{ formSubmit }"
 							value="{ todo._id }" />
 					</label>
 
 				</li>
 			</ul>
 
-			<input type="submit" value="save" />
+			<input if="{ showSubmit }" type="submit" value="save" />
 		</form>
 	</main>
 
 	<script>
 		this.formSubmit = (event) => {
 			event.preventDefault();
-			const form = event.target;
+			const form = this.refs.form;
 			const formData = new FormData(form);
 
 			fetch(form.action, {
