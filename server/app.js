@@ -7,6 +7,7 @@ const riot = require('riot');
 const nunjucks = require('nunjucks');
 const { compiledTags } = require('./compiler');
 const MongoClient = promisify(require('mongodb').MongoClient);
+const multer = require('multer');
 const app = express();
 
 let database;
@@ -17,8 +18,15 @@ nunjucks.configure('src', {
 });
 
 app.use(express.static('tags'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(multer().array());
 
-app.post('/', bodyParser.urlencoded({ extended: false }), function(req, res) {
+app.post('/test', function(req, res) {
+	res.send(req.body);
+});
+
+app.post('/', function(req, res) {
 	const todos = database.collection('todos');
 	const addNewTodo = new Promise((resolve, reject) => {
 		if (req.body['new-todo']) {
@@ -28,8 +36,8 @@ app.post('/', bodyParser.urlencoded({ extended: false }), function(req, res) {
 				updatedAt: Date.now(),
 				completed: false
 			};
-			todos.insert(todoObj)
-				.then((result) => resolve(result))
+			return todos.insert(todoObj)
+				.then(resolve)
 				.catch((err) => reject(err))
 		} else {
 			let completed;
@@ -39,35 +47,42 @@ app.post('/', bodyParser.urlencoded({ extended: false }), function(req, res) {
 				completed = [];
 			}
 
-			todos.find({}, {_id: 1}).toArray().then((result) => {
+			return todos.find({}, {_id: 1}).toArray().then((result) => {
 				const allIds = result.map(obj => obj._id.toString());
 
 				const updates = allIds.map(id => {
 					return todos.update({ _id: new ObjectId(id)}, { $set: { completed: completed.includes(id) } })
 				})
-				Promise.all(updates)
+				return Promise.all(updates)
 					.then(resolve);
 			});
 		}
 	});
 
 	addNewTodo
-		.then(() => {
+		.then((result) => {
 			if (req.body.delete) {
 				const toDelete = (typeof req.body.delete === 'string') ? [req.body.delete] : req.body.delete;
 				return Promise.all(toDelete.map(id => todos.remove( {_id: new ObjectId(id) } )));
+			} else {
+				return result
 			}
 		})
 		.then(() => {
 			todos.find({}).toArray()
 				.then((result) => {
-					const data = {
-						todos: result
-					};
-					const html = riot.render('todo-overview', data);
-					res.render('index.html', {
-						html: html
-					})
+					if (req.headers.accept === 'application/json') {
+						res.json(result);
+					} else {
+						const data = {
+							todos: result
+						};
+						const html = riot.render('todo-overview', data);
+						res.render('index.html', {
+							html,
+							data: JSON.stringify(data)
+						})
+					}
 				});	
 		});
 });
@@ -81,7 +96,8 @@ app.get('/', function(req, res) {
 			};
 			const html = riot.render('todo-overview', data);
 			res.render('index.html', {
-				html: html
+				html,
+				data: JSON.stringify(data)
 			})
 		});
 });

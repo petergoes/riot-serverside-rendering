@@ -8,10 +8,12 @@
 	{{ html }}
 
 	<script src="https://cdn.jsdelivr.net/riot/3.0/riot+compiler.min.js"></script>
-	<script src="app.tag" type="riot/tag"></script>
-	<script src="counter.tag" type="riot/tag"></script>
+	<script src="form-submit.js" type="text/javascript"></script>
+	<script src="app-header.tag" type="riot/tag"></script>
+	<script src="todo-add.tag" type="riot/tag"></script>
+	<script src="todo-overview.tag" type="riot/tag"></script>
 	<script>
-		riot.mount('*');
+		riot.mount('*', {{ data }});
 	</script>
 
 </body>

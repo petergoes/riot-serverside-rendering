@@ -2,15 +2,16 @@
 	
 	<header data-is="app-header"></header>
 	
-	<todo-add></todo-add>
+	<todo-add ref="todoAdd" add-todo-callback="{ formSubmit }"></todo-add>
 
 	<main>
 		<h2>A list of todos</h2>
 		
-		<form action="/" method="POST">
+		<form action="/" method="POST" onsubmit="{ formSubmit }">
 			<ul>
 				<li each="{ todo in opts.todos }">
 					{ todo.name }
+					-
 					<label>
 						Completed 
 						<input 
@@ -19,7 +20,7 @@
 							checked="{ todo.completed }"
 							value="{ todo._id }" />
 					</label>
-
+					-
 					<label>
 						Delete
 						<input 
@@ -31,8 +32,27 @@
 				</li>
 			</ul>
 
-			<button>Save</button>
+			<input type="submit" value="save" />
 		</form>
 	</main>
+
+	<script>
+		this.formSubmit = (event) => {
+			event.preventDefault();
+			const form = event.target;
+			const formData = new FormData(form);
+
+			fetch(form.action, {
+					method: form.method,
+					headers: { 
+						"Accept" : "application/json"
+					},
+					body: formData
+				})
+				.then((response) => response.json())
+				.then((json) => this.opts.todos = json)
+				.then(() => this.update());
+		}
+	</script>
 
 </todo-overview>
