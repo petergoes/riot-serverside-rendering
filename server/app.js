@@ -50,7 +50,7 @@ function addNewTodo(req, res, next) {
 
 		todos.insert(todoObj)
 			.then(() => todos.find({}).toArray())
-			.then(updatedTodos => sio.sockets.emit('todos-updated', updatedTodos))
+			.then(updatedTodos => notifySocketClients(updatedTodos))
 			.then(next())
 			.catch((err) => res.status(500).send(err))
 	} else {
@@ -69,7 +69,7 @@ function updateTodos(req, res, next) {
 				})
 				Promise.all(updates)
 					.then(() => todos.find({}).toArray())
-					.then(updatedTodos => sio.sockets.emit('todos-updated', updatedTodos))
+					.then(updatedTodos => notifySocketClients(updatedTodos))
 					.then(next());
 			});
 	} else {
@@ -82,7 +82,7 @@ function deleteTodos(req, res, next) {
 		const toDelete = (typeof req.body.delete === 'string') ? [req.body.delete] : req.body.delete;
 		Promise.all(toDelete.map(id => todos.remove( {_id: new ObjectId(id) } )))
 			.then(() => todos.find({}).toArray())
-			.then(updatedTodos => sio.sockets.emit('todos-updated', updatedTodos))
+			.then(updatedTodos => notifySocketClients(updatedTodos))
 			.then(next());
 	} else {
 		next();
@@ -94,15 +94,15 @@ function renderResponse(req, res) {
 		.then((result) => {
 			try {
 				if (req.headers.accept === 'application/json') {
-					res.json(result);
+					res.end();
 				} else {
-					const data = {
-						todos: result
-					};
-					const html = riot.render('todo-overview', data);
+					const data = { todos: result };
+					const serverData = Object.assign({}, data, { env: 'server' });
+					const clientData = Object.assign({}, data, { env: 'client' });
+					const html = riot.render('todo-overview', serverData);
 					res.render('index.html', {
 						html,
-						data: JSON.stringify(data)
+						data: JSON.stringify(clientData)
 					})
 				}
 			} catch (err) {
@@ -110,4 +110,9 @@ function renderResponse(req, res) {
 			}
 		})
 		.catch(err => res.send(err));
+}
+
+function notifySocketClients(updatedTodos) {
+	const data = { todos: updatedTodos, env: 'client' };
+	sio.sockets.emit('todos-updated', data);
 }
