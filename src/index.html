@@ -6,13 +6,19 @@
 </head>
 <body>
 	{{ html }}
-
+	
+	<script src="/socket.io/socket.io.js"></script>
 	<script src="https://cdn.jsdelivr.net/riot/3.0/riot+compiler.min.js"></script>
 	<script src="app-header.tag" type="riot/tag"></script>
 	<script src="todo-add.tag" type="riot/tag"></script>
 	<script src="todo-overview.tag" type="riot/tag"></script>
 	<script>
+		const socket = io.connect('/');
 		riot.mount('*', {{ data }});
+
+		socket.on('todos-updated', (data) => {
+			riot.mount('*', { todos: data });
+		})
 	</script>
 
 </body>

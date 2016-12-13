@@ -49,12 +49,7 @@
 					},
 					body: formData
 				})
-				.then((response) => response.json())
-				.then((json) => {
-					console.log('json:', json);
-					this.opts.todos = json
-				})
-				.then(() => this.update());
+				.catch(err => console.log(err));
 		}
 	</script>
 

@@ -12,11 +12,11 @@
     "bluebird": "3.4.6",
     "body-parser": "1.15.2",
     "express": "4.14.0",
-    "lodash": "4.17.2",
     "mongodb": "2.2.12",
     "multer": "1.2.0",
     "nunjucks": "3.0.0",
     "promisify": "0.0.3",
-    "riot": "3.0.1"
+    "riot": "3.0.1",
+    "socket.io": "1.7.2"
   }
 }

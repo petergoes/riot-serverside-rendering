@@ -1,7 +1,7 @@
 const promisify = require('bluebird').promisify;
 const ObjectId = require('mongodb').ObjectId;
-const _ = require('lodash');
 const express = require('express');
+const io = require('socket.io');
 const bodyParser = require('body-parser')
 const riot = require('riot');
 const nunjucks = require('nunjucks');
@@ -9,6 +9,7 @@ const { compiledTags } = require('./compiler');
 const MongoClient = promisify(require('mongodb').MongoClient);
 const multer = require('multer');
 const app = express();
+let sio;
 
 let database;
 let todos;
@@ -27,8 +28,10 @@ app.post('/', addNewTodo, updateTodos, deleteTodos, renderResponse);
 app.get('/', renderResponse);
 
 compiledTags
-	.then(() => app.listen(3000))
-	.then(() => console.log('Listening on port 3000!'));
+	.then(() => {
+		sio = io.listen(app.listen(3000));
+		console.log('Listening on port 3000!');
+	});
 
 MongoClient.connect('mongodb://localhost:27017')
 	.then((db) => database = db)
@@ -46,6 +49,8 @@ function addNewTodo(req, res, next) {
 		};
 
 		todos.insert(todoObj)
+			.then(() => todos.find({}).toArray())
+			.then(updatedTodos => sio.sockets.emit('todos-updated', updatedTodos))
 			.then(next())
 			.catch((err) => res.status(500).send(err))
 	} else {
@@ -63,6 +68,8 @@ function updateTodos(req, res, next) {
 					return todos.update({ _id: new ObjectId(id)}, { $set: { completed: completed.includes(id) } })
 				})
 				Promise.all(updates)
+					.then(() => todos.find({}).toArray())
+					.then(updatedTodos => sio.sockets.emit('todos-updated', updatedTodos))
 					.then(next());
 			});
 	} else {
@@ -74,6 +81,8 @@ function deleteTodos(req, res, next) {
 	if (req.body.delete) {
 		const toDelete = (typeof req.body.delete === 'string') ? [req.body.delete] : req.body.delete;
 		Promise.all(toDelete.map(id => todos.remove( {_id: new ObjectId(id) } )))
+			.then(() => todos.find({}).toArray())
+			.then(updatedTodos => sio.sockets.emit('todos-updated', updatedTodos))
 			.then(next());
 	} else {
 		next();
@@ -83,17 +92,22 @@ function deleteTodos(req, res, next) {
 function renderResponse(req, res) {
 	todos.find({}).toArray()
 		.then((result) => {
-			if (req.headers.accept === 'application/json') {
-				res.json(result);
-			} else {
-				const data = {
-					todos: result
-				};
-				const html = riot.render('todo-overview', data);
-				res.render('index.html', {
-					html,
-					data: JSON.stringify(data)
-				})
+			try {
+				if (req.headers.accept === 'application/json') {
+					res.json(result);
+				} else {
+					const data = {
+						todos: result
+					};
+					const html = riot.render('todo-overview', data);
+					res.render('index.html', {
+						html,
+						data: JSON.stringify(data)
+					})
+				}
+			} catch (err) {
+				throw err
 			}
-		});
+		})
+		.catch(err => res.send(err));
 }
