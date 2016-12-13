@@ -33,8 +33,7 @@
 
 				</li>
 			</ul>
-
-			<input if="{ showSubmit }" type="submit" value="save" />
+			<input if="{ opts.env === 'server' }" type="submit" value="save" />
 		</form>
 	</main>
 
