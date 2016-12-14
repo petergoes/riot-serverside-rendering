@@ -9,8 +9,8 @@ const { compiledTags } = require('./compiler');
 const MongoClient = promisify(require('mongodb').MongoClient);
 const multer = require('multer');
 const app = express();
-let sio;
 
+let sio;
 let database;
 let todos;
 
@@ -27,11 +27,10 @@ app.use(multer().array());
 app.post('/', addNewTodo, updateTodos, deleteTodos, renderResponse);
 app.get('/', renderResponse);
 
-compiledTags
-	.then(() => {
-		sio = io.listen(app.listen(3000));
-		console.log('Listening on port 3000!');
-	});
+compiledTags.then(() => {
+	sio = io.listen(app.listen(3000));
+	console.log('Listening on port 3000!');
+});
 
 MongoClient.connect('mongodb://localhost:27017')
 	.then((db) => database = db)
